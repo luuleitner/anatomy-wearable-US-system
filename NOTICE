@@ -1,0 +1,17 @@
+wearable-us-system-design
+Copyright 2026 Marco Giordano and Christoph Leitner, ETH Zurich (Integrated Systems Laboratory, D-ITET)
+
+This product includes software developed for the IEEE CEEUS 2026 Wearables
+Workshop (Warsaw, 22-24 June 2026).
+
+The software in this repository is licensed under the Apache License, Version 2.0
+(see LICENSE). Documentation, notebook text, figures, slides, teaching materials,
+and demo data are licensed under the Creative Commons Attribution 4.0
+International License (CC BY 4.0; see LICENSE-CONTENT).
+
+This work builds on, and imports, the dasIT toolbox
+(https://github.com/luuleitner/dasIT), also licensed under Apache-2.0.
+
+The ModulUS system parameters reproduced in config.yaml are sourced from the
+peer-reviewed publication and the cited datasheets noted inline; that paper
+remains under its publisher's (IEEE) copyright and is referenced, not reproduced.

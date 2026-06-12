@@ -1,0 +1,259 @@
+# SPDX-FileCopyrightText: 2026 Marco Giordano and Christoph Leitner, ETH Zurich
+# SPDX-License-Identifier: Apache-2.0
+# ════════════════════════════════════════════════════════════════════════
+#  ModulUS system definition — the digital-twin spec.
+#
+#  Each board section holds ONE board's parameters. Which board class is used is
+#  chosen in modulus.py (System); here you set the numbers.
+#  medium / excitation / transducer hold the physics + front-end constants.
+#
+#               ┌──────────────┐
+#               │  Transducer  │  external front · f_Tx is the runtime knob
+#               └──────┬───────┘
+#                 RF / echo                                       section
+#    ┌─────────────────┼──────────── ModulUS sandbox ──────────┐
+#    │          ┌──────┴───────┐                                │
+#    │          │    Pulse     │  HV pulser + T/R switch        │   pulse
+#    │          └──────┬───────┘                                │
+#    │          ┌──────┴───────┐                                │
+#    │          │    Echo      │  analog front-end (AFE)        │   echo
+#    │          └──────┬───────┘                                │
+#    │          ┌──────┴───────┐                                │
+#    │          │    Core      │  STM32H573 + 5 Msps ADC        │   core
+#    │          └──────┬───────┘                                │
+#    │           Motherboard   (interconnects the 3 boards)     │
+#    └─────────────────┼───────────────────────────────────────┘
+#                  data │
+#         ┌─────────────┴┐                     ┌──────────────┐
+#         │Wireless link │  downstream         │   Battery    │  power src
+#         └──────────────┘    radio             └──────────────┘   battery
+#
+#  Each param carries:
+#    value        the number used by the model
+#    unit         engineering unit
+#    description  what it is / context (prose)
+#    ref          citation ONLY (authors, venue, year, DOI/URL); "" if none
+#    status       cited             value taken directly from the reference
+#                 model-assumption  value we chose (ref, if present, = supporting basis)
+# ════════════════════════════════════════════════════════════════════════
+
+
+# ── medium: propagation medium (soft tissue) ──────────────────────────────
+#      )))  ~~~~~  ─►    c = speed of sound
+medium:
+  speed_of_sound_ms:
+    value: 1540
+    unit: "m/s"
+    description: "Standard soft-tissue speed of sound assumed in pulse-echo ultrasound (AIUM)."
+    ref: "W. D. O'Brien, 'Ultrasound-biophysics mechanisms,' Prog. Biophys. Mol. Biol., vol. 93, no. 1, pp. 212-255, 2007, https://doi.org/10.1016/j.pbiomolbio.2006.07.010"
+    status: cited
+
+
+# ── excitation: the transmit pulse ────────────────────────────────────────
+#      /\/\/\   n cycles   (pulse length; run-time knob, default set here)
+excitation:
+  pulse_cycles:
+    value: 5
+    unit: "cycles"
+    description: "Default excitation pulse length (run-time knob); the ModulUS experiments used 5 cycles."
+    ref: "C. Leitner et al., 'ModulUS,' IEEE IUS, 2025, https://doi.org/10.1109/IUS62464.2025.11201551"
+    status: cited
+
+
+# ── transducer: piezo element (external front; the load the pulser drives) ─
+#      [=piezo=]   C0 = element capacitance   (sets the transmit energy)
+transducer:
+  params:
+    capacitance_f:
+      value: 1.0e-9
+      unit: "F"
+      description: "Representative single-element PZT clamped capacitance C0 (geometry-dependent; literature ~22 pF to ~2.3 nF). C0 = eps0*epsT*A/t, PZT-5A clamped permittivity ~830-1470."
+      ref: "D. Berlincourt et al., 'Properties of Piezoelectric Ceramics,' Morgan Electro Ceramics, Tech. Publ. TP-226."
+      status: model-assumption
+
+
+# ── Pulse board: HV pulser + T/R switch — send the pulse ──────────────────
+#      ┌────────┐  HV pulse
+#      │ pulser │──┬──►  transducer        (T/R routes Tx out / Rx in)
+#      │  + T/R │◄─┘   echo
+#      └────────┘
+pulse:
+  params:
+    channels_exposed:
+      value: 8
+      unit: "channels"
+      description: "Channels exposed on the multi-channel HV pulser (8 of 32)."
+      ref: "C. Leitner et al., 'ModulUS,' IEEE IUS, 2025, https://doi.org/10.1109/IUS62464.2025.11201551"
+      status: cited
+    power_per_channel_w:
+      value: 0.1e-3
+      unit: "W"
+      description: "Generic low-power HV pulser dissipation per active channel (<5 mW/ch); order: a 32-channel pulser's ~0.6-2.6 mW whole-chip low-power dissipation amortized per channel."
+      ref: ""
+      status: model-assumption
+
+
+# ── Echo board: analog front-end (AFE) — condition the echo ───────────────
+#      RF ~~~►  ┌─────┐  ─►  _/‾\_     AFE = envelope | filter | amp | mixer ...
+#               │ AFE │                (envelope detect, ~4x BW cut)
+#               └─────┘
+echo:
+  params:
+    bandwidth_reduction:
+      value: 4
+      unit: "ratio"
+      description: "AFE envelope detection cuts the effective bandwidth ~4x (raw 2.9 MHz -> envelope 0.7 MHz)."
+      ref: "C. Leitner et al., 'ModulUS,' IEEE IUS, 2025, https://doi.org/10.1109/IUS62464.2025.11201551"
+      status: cited
+    amplifiers:
+      value: 4
+      unit: "count"
+      description: "Op-amps per AFE channel in the ModulUS/PuLsE envelope detector (4 x ADA4807)."
+      ref: "M. Giordano et al., 'Towards a Novel Ultrasound System Based on Low-Frequency Feature Extraction from a Fully-Printed Flexible Transducer,' IEEE BioCAS, 2023, https://doi.org/10.1109/BioCAS58349.2023.10388792"
+      status: cited
+    amp_quiescent_a:
+      value: 1.0e-3
+      unit: "A"
+      description: "Quiescent supply current per amplifier, enabled (ADA4807-2, typical)."
+      ref: "Analog Devices, 'ADA4807-1/-2/-4 datasheet,' https://www.analog.com/media/en/technical-documentation/data-sheets/ada4807-1_4807-2_4807-4.pdf"
+      status: cited
+    amp_disabled_a:
+      value: 2.4e-6
+      unit: "A"
+      description: "Supply current per amplifier when disabled (ADA4807-2 disable feature)."
+      ref: "Analog Devices, 'ADA4807-1/-2/-4 datasheet,' https://www.analog.com/media/en/technical-documentation/data-sheets/ada4807-1_4807-2_4807-4.pdf"
+      status: cited
+    supply_voltage_v:
+      value: 10.0
+      unit: "V"
+      description: "Total op-amp supply span (+-5 V = 10 V)."
+      ref: ""
+      status: model-assumption
+
+
+# ── Core board: STM32H573 (Cortex-M33) + 5 Msps ADC — digitize & compute ──
+#      analog ─► ┌──────────┐ ─► ┌─────┐ ─►  features / store / link
+#                │ ADC 2×5M │    │ MCU │
+#                └──────────┘    └─────┘
+core:
+  params:
+    adc_nyquist_factor:
+      value: 2
+      unit: "ratio"
+      description: "Nyquist criterion: sample rate >= 2x signal bandwidth."
+      ref: "C. E. Shannon, 'Communication in the presence of noise,' Proc. IRE, vol. 37, no. 1, pp. 10-21, 1949, https://doi.org/10.1109/JRPROC.1949.232969"
+      status: cited
+    adc_fs_max_hz:
+      value: 5.0e+6
+      unit: "samples/s"
+      description: "On-chip 12-bit ADC maximum sampling rate (STM32H573, two ADCs up to 5 Msps in 12-bit)."
+      ref: "STMicroelectronics, 'STM32H573xx datasheet' (DS14121), https://www.st.com/resource/en/datasheet/stm32h573ai.pdf"
+      status: cited
+    adc_fom_j:
+      value: 50.0e-15
+      unit: "J/conv-step"
+      description: "Representative MCU-class Walden ADC FoM = P/(2^ENOB*fs) (efficient ADCs <10 fJ); P_adc is negligible at our duty cycles."
+      ref: "R. H. Walden, 'Analog-to-digital converter survey and analysis,' IEEE JSAC, vol. 17, no. 4, pp. 539-550, 1999, https://doi.org/10.1109/49.761034 ; B. Murmann, 'ADC Performance Survey,' https://github.com/bmurmann/ADC-survey"
+      status: model-assumption
+    mcu_clock_mhz:
+      value: 250.0
+      unit: "MHz"
+      description: "MCU core clock; the STM32H573 runs up to 250 MHz (VOS0)."
+      ref: "STMicroelectronics, 'STM32H573xx datasheet' (DS14121), https://www.st.com/resource/en/datasheet/stm32h573ai.pdf"
+      status: cited
+    mcu_current_per_mhz_a:
+      value: 70.1e-6
+      unit: "A/MHz"
+      description: "Run-mode supply current per MHz: CoreMark from flash, SMPS regulator, peripherals off (STM32H573 at 250 MHz, VOS0)."
+      ref: "STMicroelectronics, 'STM32H573xx datasheet' (DS14121), Table 33, https://www.st.com/resource/en/datasheet/stm32h573ai.pdf"
+      status: cited
+    mcu_stop_current_a:
+      value: 90.0e-6
+      unit: "A"
+      description: "STOP-mode supply current, SRAM retained, SMPS (STM32H573, SVOS3); the duty-cycled idle floor between acquisitions."
+      ref: "STMicroelectronics, 'STM32H573xx datasheet' (DS14121), Table 36, https://www.st.com/resource/en/datasheet/stm32h573ai.pdf"
+      status: cited
+    mcu_compute_s:
+      value: 100.0e-6
+      unit: "s"
+      description: "Generic on-board feature-extraction (DSP) time per pulse; the MCU is awake at run power for this window in features mode (RF/BWR add none)."
+      ref: ""
+      status: model-assumption
+    supply_voltage_v:
+      value: 3.3
+      unit: "V"
+      description: "MCU/ADC digital supply VDD (the datasheet run-mode currents are typ at VDD = 3.3 V)."
+      ref: ""
+      status: model-assumption
+    feature_count:
+      value: 16
+      unit: "count"
+      description: "Illustrative number of features shipped per A-line in features mode."
+      ref: ""
+      status: model-assumption
+    feature_bits:
+      value: 16
+      unit: "bits"
+      description: "Bit-width of one transmitted feature (int16); a feature is a derived scalar, not an ADC sample."
+      ref: ""
+      status: model-assumption
+
+
+# ── Wireless link (e.g. BLE) — downstream add-on, NOT a ModulUS board ─────
+#      Core ─bits─►  (((•)))  ─►  host           ~1 Mb/s usable ceiling
+radio:
+  params:
+    tx_current_a:
+      value: 3.2e-3
+      unit: "A"
+      description: "Radio TX current at 0 dBm with DC/DC for a representative low-power BLE SoC."
+      ref: "Nordic Semiconductor, 'nRF5340 Product Specification v1.3.1,' 2023, https://docs.nordicsemi.com/bundle/ps_nrf5340/"
+      status: cited
+    supply_voltage_v:
+      value: 3.0
+      unit: "V"
+      description: "Radio supply (DC/DC typical operating point)."
+      ref: ""
+      status: model-assumption
+    phy_bitrate_bps:
+      value: 1.0e+6
+      unit: "bit/s"
+      description: "BLE LE 1M PHY raw on-air bit rate (the default Bluetooth LE PHY)."
+      ref: "Bluetooth SIG, 'Bluetooth Core Specification' (LE 1M PHY)."
+      status: cited
+    overhead_factor:
+      value: 2.0
+      unit: "ratio"
+      description: "Effective radio-on time per delivered bit vs raw TX (RX windows + headers + idle); lands energy/bit ~19 nJ/bit, within the measured 10-50 nJ/bit BLE range."
+      ref: "M. Siekkinen et al., 'How low energy is Bluetooth Low Energy? Comparative measurements with ZigBee/802.15.4,' IEEE WCNCW, 2012, pp. 232-237, https://doi.org/10.1109/WCNCW.2012.6215496"
+      status: model-assumption
+    throughput_max_bps:
+      value: 3.0e+5
+      unit: "bit/s"
+      description: "Practical usable BLE application throughput, well below the ~1 Mb/s theoretical (measured BLE is ~0.22-0.3 Mb/s)."
+      ref: "IEEE Xplore doc. 11418920, https://ieeexplore.ieee.org/document/11418920"
+      status: cited
+
+
+# ── Battery — external power source ───────────────────────────────────────
+#      [ + ||||| − ]   Wh ─►  cm³ / g           (sizes the wearable)
+battery:
+  params:
+    density_vol_wh_l:
+      value: 313
+      unit: "Wh/L"
+      description: "Volumetric energy density of a representative small Li-polymer wearable cell: 600 mAh x 3.7 V = 2.22 Wh in 6.5 x 42.5 x 25.7 mm (7.10 cm3)."
+      ref: "Renata SA, 'ICP622540PMT Rechargeable Li-Ion Polymer Battery (3.7 V, 600 mAh) datasheet,' https://www.renata.com/en/downloads/?product=icp622540pmt"
+      status: model-assumption
+    density_grav_wh_kg:
+      value: 202
+      unit: "Wh/kg"
+      description: "Gravimetric energy density of the same Li-polymer cell: 2.22 Wh / 11 g."
+      ref: "Renata SA, 'ICP622540PMT Rechargeable Li-Ion Polymer Battery (3.7 V, 600 mAh) datasheet,' https://www.renata.com/en/downloads/?product=icp622540pmt"
+      status: model-assumption
+    reference_cr2032_wh:
+      value: 0.65
+      unit: "Wh"
+      description: "Conservative usable energy of a CR2032 coin cell; Swiss-made datasheet nominal 225 mAh x 3 V = 0.675 Wh."
+      ref: "Renata SA, 'CR2032 3 V Lithium Coin Cell datasheet' (Swiss Made), https://www.renata.com/en-us/products/lithium-batteries/cr2032.mfr-/"
+      status: model-assumption
