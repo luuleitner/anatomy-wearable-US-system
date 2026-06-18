@@ -66,11 +66,16 @@ SLUG = "{SLUG}"                       # GitHub repo (Colab mirror)
 REPO = SLUG.split("/")[1]
 
 if IN_COLAB:
-    # external toolbox: dasIT signal/plot functions (install once per session)
+    # external toolbox: dasIT signal/plot functions (install once per session).
+    # Probe the exact submodule we use — guards against partial/shadowed installs.
     try:
-        import dasIT  # noqa: F401
+        from dasIT.features import signal as _dasIT_probe  # noqa: F401
+        print("dasIT: already available, skipping install")
     except ImportError:
-        !pip install -q git+https://github.com/luuleitner/dasIT
+        print("dasIT: not found — installing from GitHub...")
+        !pip install -q --force-reinstall --no-deps git+https://github.com/luuleitner/dasIT
+        from dasIT.features import signal as _dasIT_probe  # noqa: F401  # fail loudly if still broken
+        print("dasIT: installed OK")
     # our sandbox repo: clone so you can browse modulus.py and the demo data
     if not os.path.isdir(REPO):
         !git clone -q https://github.com/{{SLUG}}
@@ -306,7 +311,7 @@ def stage1(f_Tx_MHz=10.0, nRx=8, PRF=100, battery_days=1):
 interact(stage1,
          f_Tx_MHz=FloatSlider(value=10, min=1, max=15, step=1, description="f_Tx [MHz]"),
          nRx=Dropdown(options=[1, 8, 16, 32], value=8, description="nRx"),
-         PRF=IntSlider(value=100, min=25, max=1000, step=25, description="PRF [Hz]"),
+         PRF=IntSlider(value=100, min=1, max=1000, step=1, description="PRF [Hz]"),
          battery_days=IntSlider(value=1, min=1, max=7, description="battery [d]"));
 """))
 
@@ -364,9 +369,11 @@ def stage2(f_Tx_MHz=10.0, nRx=8, PRF=100, mode="RF", days=1):
     fig, ax = plt.subplots(1, 2, figsize=(10, 3.4))
     ax[0].bar(list(P.keys()), [P[k] * 1e3 for k in P],
               color=["#888", "#4a90d9", "#7ab648", "#d9534f"])
+    ax[0].set_yscale("log")
     ax[0].set_ylabel("power [mW]"); ax[0].set_title(f"P_avg = {d.P_avg*1e3:.1f} mW")
     ax[1].bar(["this design", "CR2032"], [b["vol_cm3"], CR2032_CM3],
               color=["#d9534f", "#888"])
+    ax[1].set_yscale("log")
     ax[1].set_ylabel("volume [cm3]")
     ax[1].set_title(f"{b['vol_cm3']:.2f} cm3  =  {b['n_cr2032']:.1f} CR2032  ({days} d)")
     ble = "FITS" if d.fits_ble else f"{d.data_rate/1e6:.2f} Mb/s OVER"
@@ -378,7 +385,7 @@ def stage2(f_Tx_MHz=10.0, nRx=8, PRF=100, mode="RF", days=1):
 interact(stage2,
          f_Tx_MHz=FloatSlider(value=10, min=1, max=15, step=1, description="f_Tx [MHz]"),
          nRx=Dropdown(options=[1, 8, 16, 32], value=8, description="nRx"),
-         PRF=IntSlider(value=100, min=25, max=1000, step=25, description="PRF [Hz]"),
+         PRF=IntSlider(value=100, min=1, max=1000, step=1, description="PRF [Hz]"),
          mode=Dropdown(options=["RF", "BWR", "features"], value="RF", description="mode"),
          days=IntSlider(value=1, min=1, max=7, description="battery [d]"));
 """))
