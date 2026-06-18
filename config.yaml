@@ -47,6 +47,10 @@ medium:
     description: "Standard soft-tissue speed of sound assumed in pulse-echo ultrasound (AIUM)."
     ref: "W. D. O'Brien, 'Ultrasound-biophysics mechanisms,' Prog. Biophys. Mol. Biol., vol. 93, no. 1, pp. 212-255, 2007, https://doi.org/10.1016/j.pbiomolbio.2006.07.010"
     status: cited
+  attenuation_db_cm_mhz:
+    value: 0.5
+    unit: "dB/(cm*MHz)"
+    description: "One-way frequency-dependent attenuation coefficient in soft tissue; round-trip is twice this."
 
 
 # ── excitation: the transmit pulse ────────────────────────────────────────

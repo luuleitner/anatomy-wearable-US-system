@@ -215,6 +215,60 @@ for f in (1e6, 5e6, 10e6, 15e6):
     print(f"   {f/1e6:>5.0f}        {Transducer().axial_res(f)*1e3:.2f}")
 """))
 
+CELLS.append(md(r"""### Resolution isn't free — it costs depth
+
+Higher $f_\text{Tx}$ buys finer resolution, but sound also **attenuates more** as
+frequency rises — roughly $\alpha \approx 0.5$ dB/cm/MHz (one-way) in soft tissue.
+Whatever your receive chain can still pull out of the noise sets a **dynamic-range
+(DR) budget**; that budget gets eaten by the round-trip path loss:
+
+$$ d_\text{max}(f) \;\approx\; \frac{\text{DR}}{2\,\alpha\,f} $$
+
+So picking a frequency is really picking a **(depth, resolution)** pair — and a
+wearable that wants to see the carotid (≈2 cm) lives in a very different corner
+than one aimed at the bladder (≈8 cm). The grey bands below show what each curve
+can actually reach.
+"""))
+
+CELLS.append(code("""# Depth-vs-frequency under different dynamic-range budgets, with axial resolution
+# read off the second x-axis directly below.
+from modulus import C_SOUND, N_CYCLES, ALPHA_DB_CM_MHZ, Transducer
+DR_BUDGETS = (10, 30, 50, 70, 90)          # dB — dynamic-range scenarios
+f = np.linspace(1, 20, 400)                # f_Tx [MHz]
+
+def axial_res_mm(f_MHz):                   # use the same twin the resolution ladder used
+    return Transducer().axial_res(f_MHz * 1e6) * 1e3
+def f_from_res(r_mm):                      # inverse, for secondary-axis ticks
+    return (N_CYCLES * C_SOUND) / (2 * r_mm * 1e-3) / 1e6
+
+fig, ax = plt.subplots(figsize=(7.8, 4.8))
+for DR in DR_BUDGETS:
+    ax.plot(f, DR / (2 * ALPHA_DB_CM_MHZ * f), label=f"DR = {DR} dB")
+
+# clinical targets a patch might realistically image
+targets = [("carotid",       2.0, 3.0,  3.0),
+           ("muscle/tendon", 1.0, 4.0,  1.4),
+           ("bladder",       5.0, 10.0, 7.5)]
+for name, lo, hi, y_label in targets:
+    ax.axhspan(lo, hi, color="#d9d9d9", alpha=0.35)
+    ax.text(1.3, y_label, name, ha="left", va="center", fontsize=9, color="#444")
+
+ax.set_xlim(1, 20); ax.set_ylim(0, 12.5)
+ax.set_xlabel("transmit frequency  f_Tx  [MHz]")
+ax.set_ylabel("reachable depth  [cm]")
+ax.set_title("Frequency buys resolution, costs depth\\n"
+             f"d_max = DR / (2·α·f),   α = {ALPHA_DB_CM_MHZ} dB/cm/MHz")
+ax.grid(alpha=0.3); ax.legend(loc="upper right")
+
+# second x-axis, just below the main one, showing axial resolution at the same f_Tx
+secax = ax.secondary_xaxis(-0.22, functions=(axial_res_mm, f_from_res))
+secax.set_xlabel(f"axial resolution at that f_Tx  [mm]")
+secax.set_xticks([2.0, 1.0, 0.5, 0.3, 0.2])      # clean res values, evenly spread on 1/f
+secax.set_xticklabels([f"{r:g}" for r in [2.0, 1.0, 0.5, 0.3, 0.2]])
+
+plt.tight_layout(); plt.show()
+"""))
+
 # ── EXERCISE 2 · COST — digitize and move the echo ──────────────────────
 CELLS.append(md("""\
 ## Exercise 2 · The cost — *digitizing and moving the echo*
