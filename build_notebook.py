@@ -409,6 +409,26 @@ per A-line, what you put on the radio:
 
 Watch what each does to the **power breakdown**, the **link bottleneck**, and the **battery**
 you would have to wear.
+
+#### One more knob: the **DSP / NN cost** (only matters in `features` mode)
+
+In `features` mode the MCU isn't just digitizing — it has to *run a small DSP pipeline
+or neural network* on each A-line to turn the waveform into a handful of numbers.
+That compute time, `t_DSP` (per pulse), wakes the core out of STOP. Power-wise it's
+just one more contribution to **awake time per period**:
+
+```
+awake_fraction  =  RX_window · PRF   +   t_DSP · PRF
+                   └── digitize ──┘     └── on-device DSP/NN ──┘
+```
+
+Two consequences worth watching:
+
+- **More compute → more power**, even if the radio fits BLE.
+- **Hard wall** — if `t_DSP > 1 / PRF` the MCU literally can't finish before the next
+  pulse arrives. The slider lets you walk into that wall.
+
+(For `RF` and `BWR` modes the MCU just streams samples, so this slider has no effect.)
 """))
 
 CELLS.append(code("""\
@@ -417,7 +437,8 @@ from ipywidgets import interact, FloatSlider, IntSlider, Dropdown
 device = System()
 CR2032_CM3 = 3.3        # reference coin-cell volume [cm3]
 
-def stage2(f_Tx_MHz=10.0, nRx=8, PRF=100, mode="RF", days=1):
+def stage2(f_Tx_MHz=10.0, nRx=8, PRF=100, mode="RF", days=1, dsp_ms=0.1):
+    device.core.mcu_compute_s = dsp_ms * 1e-3      # per-pulse DSP/NN time (only used in 'features')
     d = device.run(Acq(f_Tx_MHz * 1e6, 12, nRx, PRF, 0.03, mode))
     P = d.power; b = device.battery.size(d.P_avg, days=days)
     fig, ax = plt.subplots(1, 2, figsize=(10, 3.4))
@@ -432,8 +453,10 @@ def stage2(f_Tx_MHz=10.0, nRx=8, PRF=100, mode="RF", days=1):
     ax[1].set_title(f"{b['vol_cm3']:.2f} cm3  =  {b['n_cr2032']:.1f} CR2032  ({days} d)")
     ble = "FITS" if d.fits_ble else f"{d.data_rate/1e6:.2f} Mb/s OVER"
     adc = "on-chip" if d.fits_onchip else "external/FPGA"
+    dsp_duty = dsp_ms * 1e-3 * PRF if mode == "features" else 0.0
+    dsp_tag = f"DSP {dsp_duty*100:.1f}% of period" if mode == "features" else "DSP n/a"
     fig.suptitle(f"mode = {mode}   |   BLE {ble}   |   ADC {adc}   |   "
-                 f"FoM {d.fom:.2f} mW/MHz", fontsize=11)
+                 f"{dsp_tag}   |   FoM {d.fom:.2f} mW/MHz", fontsize=10)
     plt.tight_layout(); plt.show()
 
 interact(stage2,
@@ -441,7 +464,8 @@ interact(stage2,
          nRx=Dropdown(options=[1, 8, 16, 32], value=8, description="nRx"),
          PRF=IntSlider(value=100, min=1, max=1000, step=1, description="PRF [Hz]"),
          mode=Dropdown(options=["RF", "BWR", "features"], value="RF", description="mode"),
-         days=IntSlider(value=1, min=1, max=7, description="battery [d]"));
+         days=IntSlider(value=1, min=1, max=7, description="battery [d]"),
+         dsp_ms=FloatSlider(value=0.1, min=0.05, max=10.0, step=0.05, description="DSP/NN [ms]"));
 """))
 
 CELLS.append(code("""\
