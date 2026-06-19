@@ -66,11 +66,16 @@ SLUG = "{SLUG}"                       # GitHub repo (Colab mirror)
 REPO = SLUG.split("/")[1]
 
 if IN_COLAB:
-    # external toolbox: dasIT signal/plot functions (install once per session)
+    # external toolbox: dasIT signal/plot functions (install once per session).
+    # Probe the exact submodule we use — guards against partial/shadowed installs.
     try:
-        import dasIT  # noqa: F401
+        from dasIT.features import signal as _dasIT_probe  # noqa: F401
+        print("dasIT: already available, skipping install")
     except ImportError:
-        !pip install -q git+https://github.com/luuleitner/dasIT
+        print("dasIT: not found — installing from GitHub...")
+        !pip install -q --force-reinstall --no-deps git+https://github.com/luuleitner/dasIT
+        from dasIT.features import signal as _dasIT_probe  # noqa: F401  # fail loudly if still broken
+        print("dasIT: installed OK")
     # our sandbox repo: clone so you can browse modulus.py and the demo data
     if not os.path.isdir(REPO):
         !git clone -q https://github.com/{{SLUG}}
@@ -210,6 +215,60 @@ for f in (1e6, 5e6, 10e6, 15e6):
     print(f"   {f/1e6:>5.0f}        {Transducer().axial_res(f)*1e3:.2f}")
 """))
 
+CELLS.append(md(r"""### Resolution isn't free — it costs depth
+
+Higher $f_\text{Tx}$ buys finer resolution, but sound also **attenuates more** as
+frequency rises — roughly $\alpha \approx 0.5$ dB/cm/MHz (one-way) in soft tissue.
+Whatever your receive chain can still pull out of the noise sets a **dynamic-range
+(DR) budget**; that budget gets eaten by the round-trip path loss:
+
+$$ d_\text{max}(f) \;\approx\; \frac{\text{DR}}{2\,\alpha\,f} $$
+
+So picking a frequency is really picking a **(depth, resolution)** pair — and a
+wearable that wants to see the carotid (≈2 cm) lives in a very different corner
+than one aimed at the bladder (≈8 cm). The grey bands below show what each curve
+can actually reach.
+"""))
+
+CELLS.append(code("""# Depth-vs-frequency under different dynamic-range budgets, with axial resolution
+# read off the second x-axis directly below.
+from modulus import C_SOUND, N_CYCLES, ALPHA_DB_CM_MHZ, Transducer
+DR_BUDGETS = (10, 30, 50, 70, 90)          # dB — dynamic-range scenarios
+f = np.linspace(1, 20, 400)                # f_Tx [MHz]
+
+def axial_res_mm(f_MHz):                   # use the same twin the resolution ladder used
+    return Transducer().axial_res(f_MHz * 1e6) * 1e3
+def f_from_res(r_mm):                      # inverse, for secondary-axis ticks
+    return (N_CYCLES * C_SOUND) / (2 * r_mm * 1e-3) / 1e6
+
+fig, ax = plt.subplots(figsize=(7.8, 4.8))
+for DR in DR_BUDGETS:
+    ax.plot(f, DR / (2 * ALPHA_DB_CM_MHZ * f), label=f"DR = {DR} dB")
+
+# clinical targets a patch might realistically image
+targets = [("carotid",       2.0, 3.0,  3.0),
+           ("muscle/tendon", 1.0, 4.0,  1.4),
+           ("bladder",       5.0, 10.0, 7.5)]
+for name, lo, hi, y_label in targets:
+    ax.axhspan(lo, hi, color="#d9d9d9", alpha=0.35)
+    ax.text(1.3, y_label, name, ha="left", va="center", fontsize=9, color="#444")
+
+ax.set_xlim(1, 20); ax.set_ylim(0, 12.5)
+ax.set_xlabel("transmit frequency  f_Tx  [MHz]")
+ax.set_ylabel("reachable depth  [cm]")
+ax.set_title("Frequency buys resolution, costs depth\\n"
+             f"d_max = DR / (2·α·f),   α = {ALPHA_DB_CM_MHZ} dB/cm/MHz")
+ax.grid(alpha=0.3); ax.legend(loc="upper right")
+
+# second x-axis, just below the main one, showing axial resolution at the same f_Tx
+secax = ax.secondary_xaxis(-0.22, functions=(axial_res_mm, f_from_res))
+secax.set_xlabel(f"axial resolution at that f_Tx  [mm]")
+secax.set_xticks([2.0, 1.0, 0.5, 0.3, 0.2])      # clean res values, evenly spread on 1/f
+secax.set_xticklabels([f"{r:g}" for r in [2.0, 1.0, 0.5, 0.3, 0.2]])
+
+plt.tight_layout(); plt.show()
+"""))
+
 # ── EXERCISE 2 · COST — digitize and move the echo ──────────────────────
 CELLS.append(md("""\
 ## Exercise 2 · The cost — *digitizing and moving the echo*
@@ -306,7 +365,7 @@ def stage1(f_Tx_MHz=10.0, nRx=8, PRF=100, battery_days=1):
 interact(stage1,
          f_Tx_MHz=FloatSlider(value=10, min=1, max=15, step=1, description="f_Tx [MHz]"),
          nRx=Dropdown(options=[1, 8, 16, 32], value=8, description="nRx"),
-         PRF=IntSlider(value=100, min=25, max=1000, step=25, description="PRF [Hz]"),
+         PRF=IntSlider(value=100, min=1, max=1000, step=1, description="PRF [Hz]"),
          battery_days=IntSlider(value=1, min=1, max=7, description="battery [d]"));
 """))
 
@@ -364,9 +423,11 @@ def stage2(f_Tx_MHz=10.0, nRx=8, PRF=100, mode="RF", days=1):
     fig, ax = plt.subplots(1, 2, figsize=(10, 3.4))
     ax[0].bar(list(P.keys()), [P[k] * 1e3 for k in P],
               color=["#888", "#4a90d9", "#7ab648", "#d9534f"])
+    ax[0].set_yscale("log")
     ax[0].set_ylabel("power [mW]"); ax[0].set_title(f"P_avg = {d.P_avg*1e3:.1f} mW")
     ax[1].bar(["this design", "CR2032"], [b["vol_cm3"], CR2032_CM3],
               color=["#d9534f", "#888"])
+    ax[1].set_yscale("log")
     ax[1].set_ylabel("volume [cm3]")
     ax[1].set_title(f"{b['vol_cm3']:.2f} cm3  =  {b['n_cr2032']:.1f} CR2032  ({days} d)")
     ble = "FITS" if d.fits_ble else f"{d.data_rate/1e6:.2f} Mb/s OVER"
@@ -378,7 +439,7 @@ def stage2(f_Tx_MHz=10.0, nRx=8, PRF=100, mode="RF", days=1):
 interact(stage2,
          f_Tx_MHz=FloatSlider(value=10, min=1, max=15, step=1, description="f_Tx [MHz]"),
          nRx=Dropdown(options=[1, 8, 16, 32], value=8, description="nRx"),
-         PRF=IntSlider(value=100, min=25, max=1000, step=25, description="PRF [Hz]"),
+         PRF=IntSlider(value=100, min=1, max=1000, step=1, description="PRF [Hz]"),
          mode=Dropdown(options=["RF", "BWR", "features"], value="RF", description="mode"),
          days=IntSlider(value=1, min=1, max=7, description="battery [d]"));
 """))

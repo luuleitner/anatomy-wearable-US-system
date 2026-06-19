@@ -54,8 +54,9 @@ def _v(leaf):
 
 
 CFG = load_config()
-C_SOUND  = _v(CFG["medium"]["speed_of_sound_ms"])    # m/s soft-tissue speed of sound
-N_CYCLES = _v(CFG["excitation"]["pulse_cycles"])     # default excitation pulse length
+C_SOUND  = _v(CFG["medium"]["speed_of_sound_ms"])         # m/s soft-tissue speed of sound
+ALPHA_DB_CM_MHZ = _v(CFG["medium"]["attenuation_db_cm_mhz"])  # dB/(cm*MHz), one-way
+N_CYCLES = _v(CFG["excitation"]["pulse_cycles"])          # default excitation pulse length
 
 
 # ── Acq: the run-time knobs that define one acquisition ──────────────────────
