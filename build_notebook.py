@@ -76,8 +76,12 @@ if IN_COLAB:
         !pip install -q --force-reinstall --no-deps git+https://github.com/luuleitner/dasIT
         from dasIT.features import signal as _dasIT_probe  # noqa: F401  # fail loudly if still broken
         print("dasIT: installed OK")
-    # our sandbox repo: clone so you can browse modulus.py and the demo data
-    if not os.path.isdir(REPO):
+    # our sandbox repo: clone so you can browse modulus.py and the demo data.
+    # Guard on the module file, not just the dir: a failed/partial clone (e.g.
+    # while the repo was private) leaves an empty dir behind that would skip the
+    # re-clone and shadow a good checkout. Wipe any stale dir, then clone clean.
+    if not os.path.isfile(os.path.join(REPO, "modulus.py")):
+        !rm -rf {{REPO}}
         !git clone -q https://github.com/{{SLUG}}
     sys.path.insert(0, REPO)
     DATA = os.path.join(REPO, "example_data", "modulus_demo.npz")
