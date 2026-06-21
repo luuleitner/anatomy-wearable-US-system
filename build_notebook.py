@@ -543,6 +543,10 @@ write_nb(CELLS, REPO_ROOT / NB_NAME)
 # solutions version (filled; TODO -> SOLUTION)
 sol_cells = copy.deepcopy(CELLS)
 for c in sol_cells:
+    if c.cell_type == "markdown":
+        c.source = c.source.replace(
+            f"/blob/main/{NB_NAME}", f"/blob/main/{NB_TEACHER}")
+        continue
     if c.cell_type != "code":
         continue
     for blank, sol in SOLUTIONS.items():
