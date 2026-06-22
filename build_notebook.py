@@ -151,19 +151,37 @@ plt.tight_layout(); plt.show()
 
 CELLS.append(code("""\
 # Same echo, two representations — in time and in frequency.
-# Spectra via dasIT's Welch helper (returns frequency already in MHz).
+# RF and envelope live on different scales, so each panel carries TWO y-axes:
+# RF on the LEFT (blue), envelope on the RIGHT (red). Spectra via dasIT's Welch
+# helper (returns frequency already in MHz).
 f_rf,  P_rf  = fftsignal(rf,  fs)
 f_env, P_env = fftsignal(env, fs)
+C_RF, C_ENV = "#1f77b4", "#d9534f"
 
 fig, ax = plt.subplots(1, 2, figsize=(10, 3.2))
-ax[0].plot(t_us, rf,  lw=0.7, label="RF")
-ax[0].plot(t_us, env, lw=1.6, label="envelope")
-ax[0].set_xlabel("time [µs]"); ax[0].set_ylabel("amplitude")
-ax[0].set_title("time domain"); ax[0].legend()
-ax[1].plot(f_rf,  P_rf,  label="RF")
-ax[1].plot(f_env, P_env, label="envelope")
-ax[1].set_xlabel("frequency [MHz]"); ax[1].set_ylabel("power")
-ax[1].set_title("spectrum"); ax[1].set_xlim(0, fs/2e6); ax[1].legend()
+
+# time domain — left axis: RF, right axis: envelope
+axE0 = ax[0].twinx()
+h0  = ax[0].plot(t_us, rf,  lw=0.9, color=C_RF,  label="RF")
+h0e = axE0.plot(t_us, env, lw=1.6, color=C_ENV, label="envelope")
+ax[0].set_xlabel("time [µs]")
+ax[0].set_ylabel("RF amplitude", color=C_RF);       ax[0].tick_params(axis="y", colors=C_RF)
+axE0.set_ylabel("envelope amplitude", color=C_ENV); axE0.tick_params(axis="y", colors=C_ENV)
+axE0.spines["right"].set_visible(True); axE0.spines["right"].set_color(C_ENV); axE0.grid(False)
+ax[0].set_title("time domain")
+ax[0].legend(h0 + h0e, [l.get_label() for l in h0 + h0e], loc="upper right")
+
+# spectrum — left axis: RF power, right axis: envelope power
+axE1 = ax[1].twinx()
+h1  = ax[1].plot(f_rf,  P_rf,  lw=1.2, color=C_RF,  label="RF")
+h1e = axE1.plot(f_env, P_env, lw=1.2, color=C_ENV, label="envelope")
+ax[1].set_xlabel("frequency [MHz]")
+ax[1].set_ylabel("RF power", color=C_RF);       ax[1].tick_params(axis="y", colors=C_RF)
+axE1.set_ylabel("envelope power", color=C_ENV); axE1.tick_params(axis="y", colors=C_ENV)
+axE1.spines["right"].set_visible(True); axE1.spines["right"].set_color(C_ENV); axE1.grid(False)
+ax[1].set_title("spectrum"); ax[1].set_xlim(0, fs/2e6)
+ax[1].legend(h1 + h1e, [l.get_label() for l in h1 + h1e], loc="upper right")
+
 plt.tight_layout(); plt.show()
 """))
 

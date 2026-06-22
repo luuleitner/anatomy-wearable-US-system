@@ -311,12 +311,25 @@ def synth_rf_envelope(fs=20e6, f_Tx=2e6, depths_mm=(20.0, 21.5), n_cycles=N_CYCL
     return rf, np.abs(hilbert(rf)), fs
 
 
-def load_traces(path="modulus_demo.npz"):
-    """Return (rf, env, fs): the measured ModulUS .npz if present, otherwise a
-    synthetic trace (with a loud notice) so a live demo never stalls on a missing file."""
+def load_traces(path="modulus_demo.npz", frame=0):
+    """Return (rf, env, fs): one measured ModulUS A-line from the .npz if present,
+    otherwise a synthetic trace (with a loud notice) so a live demo never stalls on a
+    missing file.
+
+    The .npz holds rf and env as either a single 1-D trace or a stack of frames
+    (shape [n_frames, n_samples]); when it is a stack, `frame` selects which A-line to
+    return. fs is the sampling rate [Hz]; any extra keys (e.g. frames, timestamps) are
+    ignored — the notebook works with one echo at a time."""
     if Path(path).exists():
         d = np.load(path)
-        return d["rf"], d["env"], float(d["fs"])
+        rf, env = np.asarray(d["rf"]), np.asarray(d["env"])
+        if rf.ndim > 1:                  # a stack of frames -> pick one A-line
+            n = rf.shape[0]
+            if not 0 <= frame < n:
+                raise IndexError(f"frame {frame} out of range (file has {n} frames)")
+            print(f"{path}: {n} frames, using frame {frame}")
+            rf, env = rf[frame], env[frame]
+        return rf, env, float(d["fs"])
     print("=" * 60)
     print("  SYNTHETIC DATA  - real ModulUS file not found:")
     print(f"    {path}")
