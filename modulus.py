@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2026 Marco Giordano and Christoph Leitner, ETH Zurich
+# SPDX-FileCopyrightText: 2026 Dr. Christoph Leitner and Marco Giordano, ETH Zurich
 # SPDX-License-Identifier: Apache-2.0
 """ModulUS digital twin — lean software model of the modular US sandbox.
 
@@ -299,8 +299,8 @@ class System:
 # ── Demo-data twin: real ModulUS traces, or loud synthetic fallback ───────
 def synth_rf_envelope(fs=20e6, f_Tx=2e6, depths_mm=(20.0, 21.5), n_cycles=N_CYCLES):
     """Two-echo RF trace (disc upper/lower boundary) + its envelope.
-    Generic ~2 MHz placeholder until the real ModulUS traces are provided;
-    swapped out by load_traces() once the acquired .npz is present."""
+    A generic ~2 MHz synthetic stand-in used only as a fallback; load_traces()
+    returns the measured ModulUS traces instead whenever the .npz is present."""
     t = np.arange(0, 60e-6, 1 / fs)
     rf = np.zeros_like(t)
     for d_mm in depths_mm:
@@ -311,16 +311,19 @@ def synth_rf_envelope(fs=20e6, f_Tx=2e6, depths_mm=(20.0, 21.5), n_cycles=N_CYCL
     return rf, np.abs(hilbert(rf)), fs
 
 
-def load_traces(path="modulus_demo.npz", frame=0):
+def load_traces(path=None, frame=0):
     """Return (rf, env, fs): one measured ModulUS A-line from the .npz if present,
     otherwise a synthetic trace (with a loud notice) so a live demo never stalls on a
     missing file.
 
-    The .npz holds rf and env as either a single 1-D trace or a stack of frames
-    (shape [n_frames, n_samples]); when it is a stack, `frame` selects which A-line to
-    return. fs is the sampling rate [Hz]; any extra keys (e.g. frames, timestamps) are
-    ignored — the notebook works with one echo at a time."""
-    if Path(path).exists():
+    `path` defaults to the bundled example_data/modulus_demo.npz, resolved relative to
+    this module so a bare load_traces() works from any working directory. The .npz holds
+    rf and env as either a single 1-D trace or a stack of frames (shape [n_frames,
+    n_samples]); when it is a stack, `frame` selects which A-line to return. fs is the
+    sampling rate [Hz]; any extra keys (e.g. frames, timestamps) are ignored — the
+    notebook works with one echo at a time."""
+    path = Path(path) if path else Path(__file__).with_name("example_data") / "modulus_demo.npz"
+    if path.exists():
         d = np.load(path)
         rf, env = np.asarray(d["rf"]), np.asarray(d["env"])
         if rf.ndim > 1:                  # a stack of frames -> pick one A-line

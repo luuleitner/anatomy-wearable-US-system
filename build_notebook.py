@@ -1,6 +1,6 @@
-# SPDX-FileCopyrightText: 2026 Marco Giordano and Christoph Leitner, ETH Zurich
+# SPDX-FileCopyrightText: 2026 Dr. Christoph Leitner and Marco Giordano, ETH Zurich
 # SPDX-License-Identifier: Apache-2.0
-"""Builder for the CEEUS 2026 workshop Colab notebook (notebook-as-code).
+"""Builder for the wearable-ultrasound workshop Colab notebook (notebook-as-code).
 
 Run:  py -3.12 build_notebook.py
 Output: wearable_us_student.ipynb + wearable_us_teacher.ipynb at the repo root.
@@ -11,7 +11,7 @@ notebook generated (not hand-edited JSON) gives clean diffs and one source.
 import nbformat as nbf
 from pathlib import Path
 
-SLUG = "luuleitner/wearable-us-system-design"    # GitHub slug (Colab mirror)
+SLUG = "luuleitner/anatomy-wearable-US-system"   # GitHub slug (Colab mirror)
 NB_NAME = "wearable_us_student.ipynb"            # student version (TODO blanks)
 NB_TEACHER = "wearable_us_teacher.ipynb"         # instructor version (blanks filled)
 RAW = f"https://raw.githubusercontent.com/{SLUG}/main"   # raw base for assets/ images
@@ -27,7 +27,7 @@ CELLS.append(md(f"""\
 # Anatomy of a Wearable Ultrasound System
 
 ### From Components to Signals
-#### *Marco Giordano and Dr. Christoph Leitner (ETH Zurich, Switzerland)*
+#### *Dr. Christoph Leitner and Marco Giordano (ETH Zurich, Switzerland)*
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/{SLUG}/blob/main/{NB_NAME})
 
@@ -526,8 +526,8 @@ inverse (the design):  wearable → battery → power → data → ... → archi
 | on-device **features** | radio collapses | MCU compute budget (edge-AI / PULP) |
 
 **Still open (the next few years):** multi-channel *low-power* acquisition;
-phase-preserving BWR (I/Q) for Doppler and displacement; ASIC integration
-(→ Costa, Wed); transducer + edge-AI co-design. *This is where your research comes in.*
+phase-preserving BWR (I/Q) for Doppler and displacement; ASIC integration;
+transducer + edge-AI co-design. *This is where your research comes in.*
 """))
 
 CELLS.append(md("""\

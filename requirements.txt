@@ -1,4 +1,4 @@
-# CEEUS 2026 wearables workshop — ModulUS power/battery exercise
+# Wearable-ultrasound workshop — ModulUS power/battery exercise
 # Runtime deps are all pre-installed on Google Colab; pins are lower bounds
 # for local development. Keep this list lean (research-tier).
 

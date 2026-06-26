@@ -1,8 +1,8 @@
-wearable-us-system-design
-Copyright 2026 Marco Giordano and Christoph Leitner, ETH Zurich (Integrated Systems Laboratory, D-ITET)
+anatomy-wearable-US-system
+Copyright 2026 Dr. Christoph Leitner and Marco Giordano, ETH Zurich (Integrated Systems Laboratory, D-ITET)
 
-This product includes software developed for the IEEE CEEUS 2026 Wearables
-Workshop (Warsaw, 22-24 June 2026).
+This product includes software developed as open teaching material for a
+wearable-ultrasound workshop.
 
 The software in this repository is licensed under the Apache License, Version 2.0
 (see LICENSE). Documentation, notebook text, figures, slides, teaching materials,

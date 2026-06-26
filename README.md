@@ -1,7 +1,7 @@
 # Anatomy of a Wearable Ultrasound System
 ### From Components to Signals
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/luuleitner/wearable-us-system-design/blob/main/wearable_us_student.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/luuleitner/anatomy-wearable-US-system/blob/main/wearable_us_student.ipynb)
 
 A wearable ultrasound system has to do the job of a cart-sized scanner from a patch on
 the skin, on a battery small enough to wear. This is a guided, hands-on workshop that
@@ -61,8 +61,8 @@ Apache-2.0 matches the imported [dasIT](https://github.com/luuleitner/dasIT) too
 carries an explicit patent grant. CC BY 4.0 lets others reuse and adapt the teaching
 materials, including commercially, with attribution.
 
-**Attribution (CC BY 4.0):** "wearable-us-system-design" by Marco Giordano and Christoph
-Leitner, ETH Zurich, licensed under CC BY 4.0. See [`NOTICE`](NOTICE).
+**Attribution (CC BY 4.0):** "anatomy-wearable-US-system" by Dr. Christoph Leitner and
+Marco Giordano, ETH Zurich, licensed under CC BY 4.0. See [`NOTICE`](NOTICE).
 
 ## Reference
 
