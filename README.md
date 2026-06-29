@@ -2,8 +2,8 @@
 ### From Components to Signals
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/luuleitner/anatomy-wearable-US-system/blob/main/wearable_us_student.ipynb)
-[![Code DOI](https://zenodo.org/badge/1267096963.svg)](https://doi.org/10.5281/zenodo.20932912)
-[![Slides DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21030965.svg)](https://doi.org/10.5281/zenodo.21030965)
+[![Code DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21023566.svg)](https://doi.org/10.5281/zenodo.21023566)
+[![Slides DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21030966.svg)](https://doi.org/10.5281/zenodo.21030966)
 
 A wearable ultrasound system has to do the job of a cart-sized scanner from a patch on
 the skin, on a battery small enough to wear. This is a guided, hands-on workshop that
@@ -38,7 +38,7 @@ jupyter lab wearable_us_student.ipynb
 ## Slides
 
 The workshop lecture deck is archived separately on Zenodo (CC BY 4.0):
-**[Anatomy of a Wearable Ultrasound System](https://doi.org/10.5281/zenodo.21030965)**.
+**[Anatomy of a Wearable Ultrasound System](https://doi.org/10.5281/zenodo.21030966)**.
 
 ## What's inside
 
@@ -73,16 +73,12 @@ Marco Giordano, ETH Zurich, licensed under CC BY 4.0. See [`NOTICE`](NOTICE).
 
 ## How to cite
 
-This workshop has two citable artifacts, each with its own DOI:
+This workshop has two citable artifacts, each archived on Zenodo with its own DOI:
 
 | Artifact | What | DOI |
 |---|---|---|
-| Code / toolkit | notebooks, `modulus.py`, `config.yaml` | [10.5281/zenodo.20932912](https://doi.org/10.5281/zenodo.20932912) |
-| Slides | workshop lecture deck | [10.5281/zenodo.21030965](https://doi.org/10.5281/zenodo.21030965) |
-
-Both are *concept* DOIs that always resolve to the latest version. To cite exactly
-what ran at a given workshop, use the version DOIs (e.g. code v1.0.1 =
-[10.5281/zenodo.21023566](https://doi.org/10.5281/zenodo.21023566)).
+| Code / toolkit | notebooks, `modulus.py`, `config.yaml` | [10.5281/zenodo.21023566](https://doi.org/10.5281/zenodo.21023566) |
+| Slides | workshop lecture deck | [10.5281/zenodo.21030966](https://doi.org/10.5281/zenodo.21030966) |
 
 ## Reference
 
