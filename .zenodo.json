@@ -1,0 +1,28 @@
+{
+  "title": "anatomy-wearable-US-system: Guided Colab exercises on wearable ultrasound system design",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "Apache-2.0",
+  "description": "Guided Colab exercises on wearable ultrasound system design. Compute how transmit frequency, receive channels, pulse rate, and data representation (RF vs envelope vs features) set the data rate, power, and battery size, then fit an architecture to a wearable power budget.",
+  "creators": [
+    {
+      "name": "Leitner, Christoph",
+      "orcid": "0000-0002-7058-7236",
+      "affiliation": "ETH Zurich, Integrated Systems Laboratory (IIS)"
+    },
+    {
+      "name": "Giordano, Marco",
+      "orcid": "0000-0003-1106-3472",
+      "affiliation": "ETH Zurich, Integrated Systems Laboratory (IIS)"
+    }
+  ],
+  "keywords": [
+    "wearable ultrasound",
+    "ultrasound system design",
+    "power budget",
+    "data rate",
+    "embedded systems",
+    "biomedical engineering",
+    "teaching materials"
+  ]
+}
