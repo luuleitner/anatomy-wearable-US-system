@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+message: "If you use this material, please cite it using the metadata below."
+title: "anatomy-wearable-US-system: Guided Colab exercises on wearable ultrasound system design"
+type: software
+
+authors:
+  - family-names: "Leitner"
+    given-names: "Christoph"
+    affiliation: "ETH Zurich, Integrated Systems Laboratory (IIS)"
+    orcid: "https://orcid.org/0000-0002-7058-7236"   # <-- TODO: replace with your ORCID
+  - family-names: "Marco"
+    given-names: "Giordano"
+    affiliation: "ETH Zurich, Integrated Systems Laboratory (IIS)"
+    orcid: "https://orcid.org/0000-0003-1106-3472"
+
+version: "1.0.0"
+date-released: "2026-06-26"
+
+license: Apache-2.0
+repository-code: "https://github.com/luuleitner/anatomy-wearable-US-system"
+url: "https://github.com/luuleitner/anatomy-wearable-US-system"
+
+abstract: >-
+  Guided Colab exercises on wearable ultrasound system design. Compute how
+  transmit frequency, receive channels, pulse rate, and data representation
+  (RF vs envelope vs features) set the data rate, power, and battery size,
+  then fit an architecture to a wearable power budget.
+
+keywords:
+  - wearable ultrasound
+  - ultrasound system design
+  - power budget
+  - data rate
+  - embedded systems
+  - biomedical engineering
+  - teaching materials
+
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.20932912"
+    description: "Concept DOI (all versions)"
