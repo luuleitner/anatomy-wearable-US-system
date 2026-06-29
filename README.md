@@ -2,7 +2,6 @@
 ### From Components to Signals
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/luuleitner/anatomy-wearable-US-system/blob/main/wearable_us_student.ipynb)
-[![DOI](https://zenodo.org/badge/1267096963.svg)](https://doi.org/10.5281/zenodo.20932912)
 
 A wearable ultrasound system has to do the job of a cart-sized scanner from a patch on
 the skin, on a battery small enough to wear. This is a guided, hands-on workshop that
